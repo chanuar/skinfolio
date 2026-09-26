@@ -3,7 +3,7 @@ import { Outlet, useLocation, useMatches } from 'react-router';
 
 const META = {
   skinfolio: {
-    title: 'Skinfolio — Colección de skins',
+    title: 'Skinfolio',
     description: 'Mi colección de skins de League of Legends: skins, chromas, ofertas y progreso.',
     image:
       'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/characters/ahri/skins/skin27/images/ahri_splash_centered_27.jpg',

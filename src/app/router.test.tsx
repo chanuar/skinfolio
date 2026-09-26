@@ -49,7 +49,7 @@ describe('Skinfolio router', () => {
 
     render(<RouterProvider router={router} />);
 
-    await waitFor(() => expect(document.title).toBe('Skinfolio — Colección de skins'));
+    await waitFor(() => expect(document.title).toBe('Skinfolio'));
     expect(document.body).toHaveClass('skinfolio-page');
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       'href',
