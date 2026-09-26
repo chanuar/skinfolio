@@ -52,7 +52,18 @@
     <title>Skinfolio — Colección de skins</title>
   </head>
   <body class="skinfolio-page">
-    <div id="root"></div>
+    <div id="root">
+      <div class="app">
+        <a class="skinfolio-skip" href="#main-content">Saltar al contenido</a>
+        <main id="main-content" class="loading" tabindex="-1">
+          <p class="header__tag">League of Legends · Colección personal</p>
+          <h1>Skinfolio</h1>
+          <p>Skins, chromas y progreso de la colección en un solo lugar.</p>
+          <p role="status">Cargando catálogo y colección…</p>
+          <noscript>Activa JavaScript para explorar la colección.</noscript>
+        </main>
+      </div>
+    </div>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>
 </html>

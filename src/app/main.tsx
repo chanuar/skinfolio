@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 import { router } from './router';
+import '../products/skinfolio/skinfolio.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('No se encontró el nodo raíz de la aplicación.');

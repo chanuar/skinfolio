@@ -27,7 +27,6 @@ import type {
   Ownership,
   Skin,
 } from '../model/types';
-import '../skinfolio.css';
 
 type SkinfolioRouteData = { catalog: Catalog; ownership: Ownership | null; warning: string | null };
 
@@ -136,6 +135,14 @@ function App({ initialData }: { initialData: SkinfolioRouteData }) {
         Saltar al contenido
       </a>
       <main id="main-content" tabIndex={-1}>
+        <p className="project-credit">
+          Skinfolio · Colección de League of Legends
+          <span>
+            Un proyecto de <a href="https://chanuar.com">Carlos Chanuar</a>
+            {' · '}
+            <a href="https://github.com/chanuar/skinfolio">Ver código</a>
+          </span>
+        </p>
         <Header
           profile={ownership.profile}
           lastSyncAt={ownership.lastSyncAt}
@@ -151,8 +158,8 @@ function App({ initialData }: { initialData: SkinfolioRouteData }) {
 
         {!hasOwnership && (
           <div className="notice">
-            <strong>Todavía no hay datos de tu colección.</strong> Configura las variables de
-            Supabase (<code>.env</code>) para cargarla.
+            <strong>La colección personal no está disponible ahora.</strong> Puedes explorar el
+            catálogo completo mientras tanto.
           </div>
         )}
 
@@ -187,7 +194,7 @@ function App({ initialData }: { initialData: SkinfolioRouteData }) {
         {isCollection && sections.length === 0 && (
           <div className="empty">
             {!hasOwnership && view !== 'all'
-              ? 'Aún no hay colección cargada: configura Supabase para ver lo que tienes.'
+              ? 'La colección personal no está disponible. Elige «Todo» para explorar el catálogo.'
               : 'Nada coincide con esos filtros. Prueba con otro nombre o quita alguno.'}
           </div>
         )}

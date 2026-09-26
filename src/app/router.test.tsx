@@ -1,4 +1,4 @@
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createMemoryRouter, matchRoutes, RouterProvider } from 'react-router';
 import { RouteEnvironment } from './RouteEnvironment';
@@ -10,6 +10,21 @@ afterEach(() => {
 });
 
 describe('Skinfolio router', () => {
+  it('shows an accessible initial surface while data is pending', () => {
+    const router = createMemoryRouter([
+      {
+        path: '/',
+        HydrateFallback: routes[0]?.HydrateFallback,
+        loader: () => new Promise(() => {}),
+        element: <p>Loaded</p>,
+      },
+    ]);
+    render(<RouterProvider router={router} />);
+    expect(screen.getByRole('heading', { name: 'Skinfolio' })).toBeInTheDocument();
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main-content');
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando catálogo y colección');
+    router.dispose();
+  });
   it('owns the hostname root and catches unknown routes', () => {
     expect(matchRoutes(routes, '/')?.at(-1)?.route.index).toBe(true);
     expect(matchRoutes(routes, '/missing')?.at(-1)?.route.path).toBe('*');

@@ -99,6 +99,35 @@ body.skinfolio-page {
     padding: 0 20px 80px;
   }
 
+  .loading {
+    padding: 64px 0;
+  }
+
+  .project-credit {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px 24px;
+    margin: 0;
+    padding-top: 18px;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .loading h1 {
+    color: var(--gold);
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    margin: 12px 0;
+  }
+
+  .loading [role='status'] {
+    border-top: 1px solid var(--line);
+    margin-top: 32px;
+    padding-top: 20px;
+    color: var(--muted);
+  }
+
   a {
     color: var(--arcane);
   }
