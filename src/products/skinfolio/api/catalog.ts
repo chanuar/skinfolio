@@ -150,6 +150,9 @@ export function fetchCosmeticsCatalog() {
         ]),
       ),
     };
-  })();
+  })().catch((error: unknown) => {
+    cosmeticsCatalogPromise = null;
+    throw error;
+  });
   return cosmeticsCatalogPromise;
 }

@@ -316,6 +316,7 @@ body.skinfolio-page {
   /* Pestañas Skins / Chromas */
   .tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
   }
   .tab {
