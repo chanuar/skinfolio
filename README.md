@@ -6,13 +6,18 @@ currently available in Spanish.
 
 ## Features
 
+- Explore three owned skins from the champions with the highest mastery.
+- Jump to champions one skin from completion, recent acquisitions, and active
+  offers for the five champions with the highest mastery.
 - Browse skins and chromas grouped by champion.
 - Search, filter, and sort the catalog by ownership, rarity, completion, or
   mastery.
 - Track owned skins, chromas, collection value, and completion progress.
 - Review active offers, other cosmetics, recent activity, and match history
   when those data sources are available.
-- Inspect skin and chroma artwork in an accessible keyboard-friendly dialog.
+- Inspect skin and chroma artwork in an accessible dialog; use previous/next
+  buttons or arrow keys to move through the current selection. Motion respects
+  the reduced-motion preference.
 
 ## Data sources
 

@@ -131,3 +131,64 @@ export function rarityTotals(catalog: Catalog, ownership: Ownership) {
 export function chromaTotal(catalog: Catalog) {
   return [...catalog.skinById.values()].reduce((total, skin) => total + skin.chromaTotal, 0);
 }
+
+export function collectionHighlights(catalog: Catalog, ownership: Ownership, now = Date.now()) {
+  const sections = buildSkinSections(catalog, ownership, {
+    query: '',
+    view: 'all',
+    sort: 'mastery',
+    rarities: new Set(),
+    legacy: false,
+    withChromas: false,
+  });
+  const rarityOrder = [
+    'kNoRarity',
+    'kEpic',
+    'kLegendary',
+    'kMythic',
+    'kUltimate',
+    'kExalted',
+    'kTranscendent',
+  ];
+  const featured = sections
+    .flatMap(({ champ, skins }) => {
+      const skin = skins
+        .filter((skin) => ownership.ownedSkinIds.has(skin.id) && (skin.splash || skin.image))
+        .sort(
+          (a, b) => rarityOrder.indexOf(b.rarity) - rarityOrder.indexOf(a.rarity) || a.id - b.id,
+        )[0];
+      return skin ? [{ champ, skin }] : [];
+    })
+    .slice(0, 3);
+  const almostComplete = sections.filter(
+    (section) => section.ownedCount > 0 && section.total - section.ownedCount === 1,
+  );
+  const recentIds = [
+    ...new Set(
+      [...ownership.events]
+        .filter(
+          (event) => event.itemType === 'skin' && Number.isFinite(Date.parse(event.acquiredAt)),
+        )
+        .sort((a, b) => Date.parse(b.acquiredAt) - Date.parse(a.acquiredAt))
+        .map((event) => event.itemId),
+    ),
+  ]
+    .filter((id) => ownership.ownedSkinIds.has(id) && catalog.skinById.has(id))
+    .slice(0, 8);
+  const favouriteSkinIds = new Set(
+    sections
+      .filter(({ champ }) => (ownership.masteryByChampion.get(champ.id)?.points ?? 0) > 0)
+      .slice(0, 5)
+      .flatMap(({ skins }) => skins.map((skin) => skin.id)),
+  );
+  const favouriteOffers = ownership.offers.filter(
+    (offer) =>
+      offer.skinId !== null &&
+      favouriteSkinIds.has(offer.skinId) &&
+      !ownership.ownedSkinIds.has(offer.skinId) &&
+      offer.saleRp !== null &&
+      offer.saleRp >= 0 &&
+      (!offer.saleEndsAt || Date.parse(offer.saleEndsAt) > now),
+  );
+  return { featured, almostComplete, recentIds, favouriteOffers };
+}

@@ -3,6 +3,7 @@ import {
   buildChromaSections,
   buildSkinSections,
   chromaTotal,
+  collectionHighlights,
   normalizeText,
   rarityTotals,
 } from './collection';
@@ -119,4 +120,65 @@ describe('Skinfolio collection model', () => {
     expect(chromaTotal(catalog)).toBe(1);
     expect(rarityTotals(catalog, ownership).get('epic')).toEqual({ owned: 1, total: 2 });
   });
+});
+
+it('derives owned highlights, completion gaps, recent acquisitions and unexpired mastery offers', () => {
+  const pictured = skins.map((skin) => ({
+    ...skin,
+    splash: '/art.jpg',
+    rarity: skin.id === 2 ? 'kMythic' : 'kEpic',
+  }));
+  const picturedCatalog = {
+    ...catalog,
+    skinById: new Map(pictured.map((skin) => [skin.id, skin])),
+    skinsByChampion: new Map([
+      [1, pictured.slice(0, 2)],
+      [2, pictured.slice(2)],
+    ]),
+  };
+  const event = (itemId: number, acquiredAt = '2026-09-25') => ({
+    itemId,
+    itemType: 'skin',
+    acquiredAt,
+  });
+  const offer = (skinId: number, saleEndsAt: string | null = null) => ({
+    skinId,
+    rp: 1000,
+    saleRp: 500,
+    discount: 50,
+    saleEndsAt,
+    owned: false,
+  });
+  const result = collectionHighlights(
+    picturedCatalog,
+    {
+      ...ownership,
+      ownedSkinIds: new Set([1, 3]),
+      events: [
+        event(1, '2026-09-24'),
+        event(3),
+        event(1),
+        event(999),
+        event(2),
+        event(3, 'invalid'),
+      ],
+      offers: [offer(1), offer(2), offer(2, '2020-01-01'), offer(999)],
+    },
+    Date.parse('2026-09-26'),
+  );
+  expect(result.featured.map(({ skin }) => skin.id)).toEqual([3, 1]);
+  expect(result.almostComplete.map(({ champ }) => champ.id)).toEqual([1]);
+  expect(result.recentIds).toEqual([3, 1]);
+  expect(result.favouriteOffers).toEqual([offer(2)]);
+  expect(
+    collectionHighlights(picturedCatalog, { ...ownership, ownedSkinIds: new Set([1, 2]) })
+      .featured[0]?.skin.id,
+  ).toBe(2);
+  expect(
+    collectionHighlights(picturedCatalog, {
+      ...ownership,
+      masteryByChampion: new Map(),
+      offers: [offer(2)],
+    }).favouriteOffers,
+  ).toEqual([]);
 });

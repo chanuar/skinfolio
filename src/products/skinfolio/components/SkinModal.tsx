@@ -17,6 +17,9 @@ export function SkinModal({
   ownedChromaIds,
   assetUrl,
   onClose,
+  position = 0,
+  total = 1,
+  onNavigate,
 }: {
   skin: Skin;
   initialChromaId: number | null;
@@ -24,19 +27,48 @@ export function SkinModal({
   ownedChromaIds: Set<number>;
   assetUrl: AssetUrl;
   onClose: () => void;
+  position?: number;
+  total?: number;
+  onNavigate?: (direction: -1 | 1) => void;
 }) {
-  const [selectedId, setSelectedId] = useState(initialChromaId ?? null);
-  const [imgFailed, setImgFailed] = useState(false);
+  const [selection, setSelection] = useState({ skinId: skin.id, chromaId: initialChromaId });
+  const selectedId = selection.skinId === skin.id ? selection.chromaId : initialChromaId;
+  const [failedSources, setFailedSources] = useState<Set<string>>(() => new Set());
   const dialogRef = useRef<HTMLDialogElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     openerRef.current = document.activeElement as HTMLElement | null;
+    const card = openerRef.current?.closest('.skin, .chromacard, .showcase__card');
+    const origin = card?.getBoundingClientRect();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     dialog?.showModal();
+    let animation: Animation | undefined;
+    if (
+      dialog &&
+      origin?.width &&
+      dialog.animate &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      const target = dialog.getBoundingClientRect();
+      animation = dialog.animate(
+        [
+          {
+            transform: `translate(${origin.x + origin.width / 2 - target.x - target.width / 2}px, ${origin.y + origin.height / 2 - target.y - target.height / 2}px) scale(${Math.min(1, origin.width / target.width)})`,
+            opacity: 0.25,
+          },
+          { transform: 'none', opacity: 1 },
+        ],
+        { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' },
+      );
+    }
     return () => {
+      animation?.cancel();
       if (dialog?.open) dialog.close();
-      openerRef.current?.focus();
+      document.body.style.overflow = overflow;
+      openerRef.current?.focus({ preventScroll: true });
     };
   }, []);
 
@@ -51,7 +83,7 @@ export function SkinModal({
 
   const rarity = rarityInfo(skin.rarity);
   const chroma = selectedId != null ? skin.chromas.find((c) => c.id === selectedId) : null;
-  const showChromaRender = chroma?.image && !imgFailed;
+  const showChromaRender = chroma?.image && !failedSources.has(assetUrl(chroma.image));
   const bigSrc = showChromaRender ? assetUrl(chroma.image) : assetUrl(skin.splash || skin.image);
   const selectedOwned = chroma ? ownedChromaIds.has(chroma.id) : skinOwned;
   const ownedChromaCount = skin.chromas.reduce((n, c) => n + (ownedChromaIds.has(c.id) ? 1 : 0), 0);
@@ -62,6 +94,17 @@ export function SkinModal({
       className="modal"
       aria-label={skin.name}
       onCancel={handleCancel}
+      onKeyDown={(event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        if (event.key === 'ArrowLeft' && position > 0) {
+          event.preventDefault();
+          onNavigate?.(-1);
+        }
+        if (event.key === 'ArrowRight' && position < total - 1) {
+          event.preventDefault();
+          onNavigate?.(1);
+        }
+      }}
       onClick={(e) => e.target === e.currentTarget && closeParent()}
     >
       <button className="modal__close" type="button" onClick={closeParent} aria-label="Cerrar">
@@ -74,7 +117,7 @@ export function SkinModal({
           className="modal__img"
           src={bigSrc}
           alt={chroma ? `${skin.name} — chroma ${chroma.name}` : skin.name}
-          onError={() => setImgFailed(true)}
+          onError={() => setFailedSources((sources) => new Set([...sources, bigSrc]))}
         />
       </div>
 
@@ -103,8 +146,8 @@ export function SkinModal({
               <button
                 className={`stone stone--original ${selectedId === null ? 'stone--selected' : ''}`}
                 onClick={() => {
-                  setImgFailed(false);
-                  setSelectedId(null);
+                  setFailedSources(new Set());
+                  setSelection({ skinId: skin.id, chromaId: null });
                 }}
                 title="Skin original"
                 aria-pressed={selectedId === null}
@@ -120,8 +163,8 @@ export function SkinModal({
                     className={`stone ${owned ? 'stone--owned' : 'stone--locked'} ${selectedId === c.id ? 'stone--selected' : ''}`}
                     style={cssVars({ '--c0': c.colors[0], '--c1': c.colors[1] ?? c.colors[0] })}
                     onClick={() => {
-                      setImgFailed(false);
-                      setSelectedId(c.id);
+                      setFailedSources(new Set());
+                      setSelection({ skinId: skin.id, chromaId: c.id });
                     }}
                     title={`${c.name}${owned ? '' : ' · no poseído'}`}
                     aria-label={`${c.name}, ${owned ? 'poseído' : 'no poseído'}`}
@@ -136,6 +179,30 @@ export function SkinModal({
           </>
         )}
       </div>
+      {total > 1 && (
+        <nav className="modal__navigation" aria-label="Navegar entre skins">
+          <button
+            type="button"
+            disabled={position <= 0}
+            onClick={() => onNavigate?.(-1)}
+            aria-label="Skin anterior"
+          >
+            ← <span>Anterior</span>
+          </button>
+          <span role="status" aria-live="polite">
+            {position + 1} / {total}
+            <span className="sr-only"> · {skin.name}</span>
+          </span>
+          <button
+            type="button"
+            disabled={position >= total - 1}
+            onClick={() => onNavigate?.(1)}
+            aria-label="Skin siguiente"
+          >
+            <span>Siguiente</span> →
+          </button>
+        </nav>
+      )}
     </dialog>
   );
 }

@@ -394,7 +394,10 @@ export function SkinCard({
       role="button"
       tabIndex={0}
       aria-label={label}
-      onClick={() => onOpen(skin)}
+      onClick={(event) => {
+        event.currentTarget.focus({ preventScroll: true });
+        onOpen(skin);
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
