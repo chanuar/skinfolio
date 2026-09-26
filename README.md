@@ -18,7 +18,11 @@ currently available in Spanish.
 
 The public catalog and artwork come from
 [CommunityDragon](https://www.communitydragon.org/), so catalog data follows the
-latest available League of Legends patch.
+latest available League of Legends patch. Production serves a compact, validated
+catalog through `/api/skins`, cached at the edge and in the browser for one hour.
+Only public catalog fields are cached; personal collection data is read separately.
+If this endpoint fails, the app falls back to CommunityDragon directly. Local Vite
+development uses CommunityDragon directly as well.
 
 Personal collection data is read from Supabase through its REST API. The
 browser uses only a publishable key; Row Level Security must protect all exposed

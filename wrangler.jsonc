@@ -1,5 +1,11 @@
 {
   "name": "skinfolio",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-08-16",
-  "assets": { "directory": "./dist", "not_found_handling": "404-page" },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/skins"],
+    "not_found_handling": "404-page",
+  },
 }

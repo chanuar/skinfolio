@@ -1,18 +1,7 @@
 import type { Catalog } from '../model/types';
+import { CATALOG_BASE as BASE, compactSkins } from './skinData';
 
 type RawChampion = { id: number; name: string };
-type RawSkin = {
-  id: number;
-  name: string;
-  rarity?: string;
-  isBase?: boolean;
-  isLegacy?: boolean;
-  loadScreenPath?: string;
-  tilePath?: string;
-  splashPath?: string;
-  uncenteredSplashPath?: string;
-  chromas?: Array<{ id: number; name?: string; colors?: string[]; chromaPath?: string }>;
-};
 type RawWard = { id: number; name: string; wardImagePath: string };
 type RawEmote = { id: number; name?: string; inventoryIcon: string };
 type RawIcon = { id: number; title?: string; imagePath: string };
@@ -20,8 +9,6 @@ type RawIcon = { id: number; title?: string; imagePath: string };
 // Catálogo público de skins y campeones desde Community Dragon.
 // El catálogo NO vive en nuestra base de datos: aquí está siempre al día
 // con el último parche y las imágenes se sirven desde su CDN.
-
-const BASE = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default';
 
 /** Convierte rutas tipo "/lol-game-data/assets/v1/..." en URLs absolutas del CDN. */
 export function assetUrl(path: string | null | undefined) {
@@ -55,15 +42,28 @@ export function rarityInfo(key: string) {
  * Descarga y normaliza el catálogo.
  * @returns {{ champions: Array<{id,name}>, skinsByChampion: Map<number, Array>, skinById: Map<number, object>, totals: object }}
  */
+async function fetchSkins() {
+  if (import.meta.env.PROD) {
+    try {
+      const response = await fetch('/api/skins', { signal: AbortSignal.timeout(12000) });
+      if (!response.ok) throw new Error('Catálogo no disponible');
+      return compactSkins(await response.json());
+    } catch {
+      // Keep browsing available when the compact endpoint is unavailable.
+    }
+  }
+  const response = await fetch(`${BASE}/v1/skins.json`);
+  if (!response.ok) throw new Error('No se pudo descargar el catálogo de Community Dragon');
+  return compactSkins(await response.json());
+}
+
 export async function fetchCatalog(): Promise<Catalog> {
-  const [skinsRes, champsRes] = await Promise.all([
-    fetch(`${BASE}/v1/skins.json`),
+  const [skinsRaw, champsRes] = await Promise.all([
+    fetchSkins(),
     fetch(`${BASE}/v1/champion-summary.json`),
   ]);
-  if (!skinsRes.ok || !champsRes.ok)
-    throw new Error('No se pudo descargar el catálogo de Community Dragon');
+  if (!champsRes.ok) throw new Error('No se pudo descargar el catálogo de Community Dragon');
 
-  const skinsRaw = (await skinsRes.json()) as Record<string, RawSkin>; // objeto { [skinId]: skin }
   const champsRaw = (await champsRes.json()) as RawChampion[]; // array [{ id, name, alias }]
 
   const champions = champsRaw
